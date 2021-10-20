@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Button,
   TextInput,
+  ScrollView,
 } from 'react-native';
 
 const Main = () => {
@@ -20,7 +21,11 @@ const Main = () => {
       return;
     }
     setCurrentTodo('');
-    setTodoList([...todoList, currentTodo]);
+    setTodoList([
+      ...todoList,
+      {id: Date.now(), text: currentTodo, isToday: today},
+    ]);
+    console.log(todoList);
   };
 
   const onChangeText = text => setCurrentTodo(text);
@@ -33,14 +38,29 @@ const Main = () => {
     setToday(false);
   };
 
+  const handleDeleteTodolist = id => {
+    // alert(id);
+    setTodoList([...todoList].filter(el => el.id !== id));
+  };
+
   return (
     <View style={styles.main}>
       <View style={styles.nav}>
         <TouchableOpacity onPress={handleToday}>
-          <Text style={styles.navMenu}>Today 📝</Text>
+          <Text
+            style={
+              today ? {...styles.navMenu, color: 'black'} : styles.navMenu
+            }>
+            Today
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleWeekly}>
-          <Text style={styles.navMenu}>Weekly 📅</Text>
+          <Text
+            style={
+              today ? styles.navMenu : {...styles.navMenu, color: 'black'}
+            }>
+            Weekly
+          </Text>
         </TouchableOpacity>
       </View>
       <View style={styles.todo}>
@@ -56,17 +76,19 @@ const Main = () => {
             style={styles.todoSubmitInput}
             onChangeText={onChangeText}
             onSubmitEditing={onSubmitInputValue}></TextInput>
-
-          {/* <Button title="입력" onPress={onSubmitInputValue}></Button> */}
         </View>
-        <View style={styles.todoListsContainer}>
-          {todoList.map(todo => (
-            <View style={styles.todoListContainer}>
-              <Text style={styles.todoList}>{todo}</Text>
-              <Button title="삭제"></Button>
-            </View>
-          ))}
-        </View>
+        <ScrollView style={styles.todoListsContainer}>
+          {todoList.map(todo =>
+            todo.isToday === today ? (
+              <View style={styles.todoListContainer} key={todo.id}>
+                <Text style={styles.todoList}>📌 {todo.text}</Text>
+                <Button
+                  onPress={() => handleDeleteTodolist(todo.id)}
+                  title="🗑"></Button>
+              </View>
+            ) : null,
+          )}
+        </ScrollView>
       </View>
     </View>
   );
@@ -80,7 +102,7 @@ const styles = StyleSheet.create({
   todo: {
     flex: 1,
     backgroundColor: 'white',
-    // alignItems: 'center',
+    alignItems: 'center',
   },
   todoInputContainer: {
     flexDirection: 'row',
@@ -97,15 +119,16 @@ const styles = StyleSheet.create({
   },
   todoListsContainer: {
     marginTop: 20,
-    marginLeft: 50,
+    width: '70%',
   },
   todoListContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
   todoList: {
-    fontSize: 20,
+    fontSize: 16,
+    fontWeight: '600',
   },
   nav: {
     flex: 0.1,
@@ -119,6 +142,7 @@ const styles = StyleSheet.create({
   navMenu: {
     fontSize: 20,
     fontWeight: '600',
+    color: 'grey',
   },
 });
 

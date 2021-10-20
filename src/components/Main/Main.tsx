@@ -8,38 +8,52 @@ import {
   Button,
   TextInput,
   ScrollView,
+  Alert,
+  Dimensions,
 } from 'react-native';
+import colors from '../../styles/colors';
+
+type TodoList = {
+  id: number;
+  text: string;
+  isToday: boolean;
+};
+
+const windowWidth = Dimensions.get('window').width;
 
 const Main = () => {
-  const [today, setToday] = useState(true);
-  const [currentTodo, setCurrentTodo] = useState('');
-  const [todoList, setTodoList] = useState([]);
-  const inputRef = React.createRef();
+  const [isToday, setIsToday] = useState<boolean>(true);
+  const [currentTodo, setCurrentTodo] = useState<string>('');
+  const [todoList, setTodoList] = useState<Array<TodoList>>([]);
 
   const onSubmitInputValue = () => {
     if (currentTodo === '') {
       return;
     }
-    setCurrentTodo('');
     setTodoList([
       ...todoList,
-      {id: Date.now(), text: currentTodo, isToday: today},
+      {id: Date.now(), text: currentTodo, isToday: isToday},
     ]);
-    console.log(todoList);
+    setCurrentTodo('');
   };
 
-  const onChangeText = text => setCurrentTodo(text);
+  const onChangeText = (text: string) => setCurrentTodo(text);
 
-  const handleToday = () => {
-    setToday(true);
-  };
+  const handleToday = () => setIsToday(true);
 
-  const handleWeekly = () => {
-    setToday(false);
-  };
+  const handleWeekly = () => setIsToday(false);
 
-  const handleDeleteTodolist = id => {
-    setTodoList([...todoList].filter(el => el.id !== id));
+  const handleDeleteTodolist = (id: number) => {
+    Alert.alert('정말 삭제하시겠어요?', '', [
+      {
+        text: '네',
+        onPress: () =>
+          setTodoList([...todoList].filter((toDo: TodoList) => toDo.id !== id)),
+      },
+      {
+        text: '아니요',
+      },
+    ]);
   };
 
   return (
@@ -48,10 +62,10 @@ const Main = () => {
         <TouchableOpacity onPress={handleToday}>
           <Text
             style={
-              today
+              isToday
                 ? {
                     ...styles.navMenu,
-                    color: 'black',
+                    color: colors.black,
                   }
                 : styles.navMenu
             }>
@@ -60,9 +74,10 @@ const Main = () => {
         </TouchableOpacity>
         <TouchableOpacity onPress={handleWeekly}>
           <Text
-            style={
-              today ? styles.navMenu : {...styles.navMenu, color: 'black'}
-            }>
+            style={{
+              ...styles.navMenu,
+              color: isToday ? colors.grey : colors.black,
+            }}>
             Weekly
           </Text>
         </TouchableOpacity>
@@ -70,9 +85,9 @@ const Main = () => {
       <View style={styles.todo}>
         <View style={styles.todoInputContainer}>
           <TextInput
-            ref={inputRef}
+            value={currentTodo}
             placeholder={
-              today
+              isToday
                 ? "Write your today's todolist"
                 : 'Write your weekly todolist'
             }
@@ -83,7 +98,7 @@ const Main = () => {
         </View>
         <ScrollView style={styles.todoListsContainer}>
           {todoList.map(todo =>
-            todo.isToday === today ? (
+            todo.isToday === isToday ? (
               <View style={styles.todoListContainer} key={todo.id}>
                 <Text style={styles.todoList}>📌 {todo.text}</Text>
                 <Button
@@ -101,11 +116,10 @@ const Main = () => {
 const styles = StyleSheet.create({
   main: {
     flex: 1,
-    backgroundColor: '#FFDAB9',
+    backgroundColor: colors.background,
   },
   todo: {
     flex: 1,
-    // backgroundColor: 'white',
     alignItems: 'center',
   },
   todoInputContainer: {
@@ -119,7 +133,7 @@ const styles = StyleSheet.create({
     padding: 7,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: 'grey',
+    borderColor: colors.darkGrey,
   },
   todoListsContainer: {
     marginTop: 20,
@@ -131,7 +145,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   todoList: {
-    fontSize: 16,
+    fontSize: windowWidth * 0.04,
     fontWeight: '600',
   },
   nav: {
@@ -139,14 +153,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    // backgroundColor: 'skyblue',
     marginTop: 50,
-    fontSize: 25,
   },
   navMenu: {
-    fontSize: 20,
+    fontSize: windowWidth * 0.06,
     fontWeight: '600',
-    color: 'grey',
+    color: colors.grey,
   },
 });
 

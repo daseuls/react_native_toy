@@ -39,7 +39,6 @@ const Main = () => {
   };
 
   const handleDeleteTodolist = id => {
-    // alert(id);
     setTodoList([...todoList].filter(el => el.id !== id));
   };
 
@@ -49,7 +48,12 @@ const Main = () => {
         <TouchableOpacity onPress={handleToday}>
           <Text
             style={
-              today ? {...styles.navMenu, color: 'black'} : styles.navMenu
+              today
+                ? {
+                    ...styles.navMenu,
+                    color: 'black',
+                  }
+                : styles.navMenu
             }>
             Today
           </Text>
@@ -97,11 +101,11 @@ const Main = () => {
 const styles = StyleSheet.create({
   main: {
     flex: 1,
-    backgroundColor: 'yellow',
+    backgroundColor: '#FFDAB9',
   },
   todo: {
     flex: 1,
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
     alignItems: 'center',
   },
   todoInputContainer: {
@@ -135,7 +139,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    backgroundColor: 'skyblue',
+    // backgroundColor: 'skyblue',
     marginTop: 50,
     fontSize: 25,
   },

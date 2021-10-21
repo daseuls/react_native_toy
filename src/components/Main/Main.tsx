@@ -10,6 +10,7 @@ import {
   ScrollView,
   Alert,
   Dimensions,
+  FlatList,
 } from 'react-native';
 import colors from '../../styles/colors';
 
@@ -56,6 +57,20 @@ const Main = () => {
     ]);
   };
 
+  const renderItem = ({item: todo}) => {
+    if (todo.isToday === isToday) {
+      return (
+        <View style={styles.todoListContainer} key={todo.id}>
+          <Text style={styles.todoList}>{todo.text}</Text>
+          <Button
+            onPress={() => handleDeleteTodolist(todo.id)}
+            title="🗑"></Button>
+        </View>
+      );
+    }
+    return null;
+  };
+
   return (
     <View style={styles.main}>
       <View style={styles.nav}>
@@ -96,18 +111,12 @@ const Main = () => {
             onChangeText={onChangeText}
             onSubmitEditing={onSubmitInputValue}></TextInput>
         </View>
-        <ScrollView style={styles.todoListsContainer}>
-          {todoList.map(todo =>
-            todo.isToday === isToday ? (
-              <View style={styles.todoListContainer} key={todo.id}>
-                <Text style={styles.todoList}>📌 {todo.text}</Text>
-                <Button
-                  onPress={() => handleDeleteTodolist(todo.id)}
-                  title="🗑"></Button>
-              </View>
-            ) : null,
-          )}
-        </ScrollView>
+        <FlatList
+          style={styles.todoListsContainer}
+          data={todoList}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
+        />
       </View>
     </View>
   );

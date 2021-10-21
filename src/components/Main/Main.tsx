@@ -3,16 +3,15 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
   Button,
   TextInput,
-  ScrollView,
   Alert,
   Dimensions,
   FlatList,
 } from 'react-native';
 import colors from '../../styles/colors';
+// import AsyncStorage from '@react-native-community/async-storage';
 
 type TodoList = {
   id: number;
@@ -26,6 +25,12 @@ const Main = () => {
   const [isToday, setIsToday] = useState<boolean>(true);
   const [currentTodo, setCurrentTodo] = useState<string>('');
   const [todoList, setTodoList] = useState<Array<TodoList>>([]);
+
+  // const saveTodoList = () => {
+  //   AsyncStorage.setItem('state', 'hi', () => {
+  //     console.log('hi');
+  //   });
+  // };
 
   const onSubmitInputValue = () => {
     if (currentTodo === '') {
@@ -62,9 +67,7 @@ const Main = () => {
       return (
         <View style={styles.todoListContainer} key={todo.id}>
           <Text style={styles.todoList}>{todo.text}</Text>
-          <Button
-            onPress={() => handleDeleteTodolist(todo.id)}
-            title="🗑"></Button>
+          <Button onPress={() => handleDeleteTodolist(todo.id)} title="🗑" />
         </View>
       );
     }
@@ -109,7 +112,8 @@ const Main = () => {
             returnKeyType="done"
             style={styles.todoSubmitInput}
             onChangeText={onChangeText}
-            onSubmitEditing={onSubmitInputValue}></TextInput>
+            onSubmitEditing={onSubmitInputValue}
+          />
         </View>
         <FlatList
           style={styles.todoListsContainer}

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
   FlatList,
 } from 'react-native';
 import colors from '../../styles/colors';
-// import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-community/async-storage';
 
 type TodoList = {
   id: number;
@@ -26,21 +26,37 @@ const Main = () => {
   const [currentTodo, setCurrentTodo] = useState<string>('');
   const [todoList, setTodoList] = useState<Array<TodoList>>([]);
 
-  // const saveTodoList = () => {
-  //   AsyncStorage.setItem('state', 'hi', () => {
-  //     console.log('hi');
-  //   });
-  // };
+  const saveTodoList = async todo => {
+    await AsyncStorage.setItem('todos', JSON.stringify(todo));
+    const res = await AsyncStorage.getItem('todos');
+    if (res !== null) {
+      console.log(res);
+    }
+  };
 
-  const onSubmitInputValue = () => {
+  useEffect(() => {
+    loadTodoList();
+  }, []);
+
+  const loadTodoList = async () => {
+    const res = await AsyncStorage.getItem('todos');
+    if (res !== null) {
+      setTodoList(JSON.parse(res));
+      console.log(res);
+    }
+  };
+
+  const onSubmitInputValue = async () => {
     if (currentTodo === '') {
       return;
     }
-    setTodoList([
+    const newTodoList = [
       ...todoList,
       {id: Date.now(), text: currentTodo, isToday: isToday},
-    ]);
+    ];
+    setTodoList(newTodoList);
     setCurrentTodo('');
+    await saveTodoList(newTodoList);
   };
 
   const onChangeText = (text: string) => setCurrentTodo(text);

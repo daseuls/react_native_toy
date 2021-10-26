@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import {useSelector, useDispatch} from 'react-redux';
 import {
   View,
   Text,
@@ -7,11 +8,15 @@ import {
   Button,
   TextInput,
   Alert,
-  Dimensions,
   FlatList,
+  Dimensions,
 } from 'react-native';
 import colors from '../../styles/colors';
-import AsyncStorage from '@react-native-community/async-storage';
+import {
+  updateIsTodayAction,
+  updateCurrentTodo,
+  updateTodoList,
+} from '../../store/modules/todoList';
 
 type TodoList = {
   id: number;
@@ -22,29 +27,36 @@ type TodoList = {
 const windowWidth = Dimensions.get('window').width;
 
 const Main = () => {
-  const [isToday, setIsToday] = useState<boolean>(true);
-  const [currentTodo, setCurrentTodo] = useState<string>('');
-  const [todoList, setTodoList] = useState<Array<TodoList>>([]);
+  const dispatch = useDispatch();
 
-  const saveTodoList = async todo => {
-    await AsyncStorage.setItem('todos', JSON.stringify(todo));
-    const res = await AsyncStorage.getItem('todos');
-    if (res !== null) {
-      console.log(res);
-    }
-  };
+  // const [isToday, setIsToday] = useState<boolean>(true);
+  const isToday = useSelector(state => state.todoListReducer.isToday);
 
-  useEffect(() => {
-    loadTodoList();
-  }, []);
+  // const [currentTodo, setCurrentTodo] = useState<string>('');
+  const currentTodo = useSelector(state => state.todoListReducer.currentTodo);
 
-  const loadTodoList = async () => {
-    const res = await AsyncStorage.getItem('todos');
-    if (res !== null) {
-      setTodoList(JSON.parse(res));
-      console.log(res);
-    }
-  };
+  // const [todoList, setTodoList] = useState<Array<TodoList>>([]);
+  const todoList = useSelector(state => state.todoListReducer.todoList);
+
+  // const saveTodoList = async todo => {
+  //   await AsyncStorage.setItem('todos', JSON.stringify(todo));
+  //   const res = await AsyncStorage.getItem('todos');
+  //   if (res !== null) {
+  //     console.log(res);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   loadTodoList();
+  // }, []);
+
+  // const loadTodoList = async () => {
+  //   const res = await AsyncStorage.getItem('todos');
+  //   if (res !== null) {
+  // setTodoList(JSON.parse(res));
+  //     console.log(res);
+  //   }
+  // };
 
   const onSubmitInputValue = async () => {
     if (currentTodo === '') {
@@ -54,23 +66,31 @@ const Main = () => {
       ...todoList,
       {id: Date.now(), text: currentTodo, isToday: isToday},
     ];
-    setTodoList(newTodoList);
-    setCurrentTodo('');
-    await saveTodoList(newTodoList);
+    dispatch(updateTodoList(newTodoList));
+    dispatch(updateCurrentTodo(''));
   };
 
-  const onChangeText = (text: string) => setCurrentTodo(text);
+  const onChangeText = (text: string) => dispatch(updateCurrentTodo(text));
 
-  const handleToday = () => setIsToday(true);
+  const handleToday = () => {
+    dispatch(updateIsTodayAction(true));
+  };
 
-  const handleWeekly = () => setIsToday(false);
+  const handleWeekly = () => {
+    dispatch(updateIsTodayAction(false));
+  };
 
   const handleDeleteTodolist = (id: number) => {
     Alert.alert('정말 삭제하시겠어요?', '', [
       {
         text: '네',
         onPress: () =>
-          setTodoList([...todoList].filter((toDo: TodoList) => toDo.id !== id)),
+          // setTodoList([...todoList].filter((toDo: TodoList) => toDo.id !== id)),
+          dispatch(
+            updateTodoList(
+              [...todoList].filter((toDo: TodoList) => toDo.id !== id),
+            ),
+          ),
       },
       {
         text: '아니요',

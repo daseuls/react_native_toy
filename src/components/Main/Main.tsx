@@ -29,34 +29,11 @@ const windowWidth = Dimensions.get('window').width;
 const Main = () => {
   const dispatch = useDispatch();
 
-  // const [isToday, setIsToday] = useState<boolean>(true);
   const isToday = useSelector(state => state.todoListReducer.isToday);
 
-  // const [currentTodo, setCurrentTodo] = useState<string>('');
   const currentTodo = useSelector(state => state.todoListReducer.currentTodo);
 
-  // const [todoList, setTodoList] = useState<Array<TodoList>>([]);
   const todoList = useSelector(state => state.todoListReducer.todoList);
-
-  // const saveTodoList = async todo => {
-  //   await AsyncStorage.setItem('todos', JSON.stringify(todo));
-  //   const res = await AsyncStorage.getItem('todos');
-  //   if (res !== null) {
-  //     console.log(res);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   loadTodoList();
-  // }, []);
-
-  // const loadTodoList = async () => {
-  //   const res = await AsyncStorage.getItem('todos');
-  //   if (res !== null) {
-  // setTodoList(JSON.parse(res));
-  //     console.log(res);
-  //   }
-  // };
 
   const onSubmitInputValue = async () => {
     if (currentTodo === '') {
@@ -85,7 +62,6 @@ const Main = () => {
       {
         text: '네',
         onPress: () =>
-          // setTodoList([...todoList].filter((toDo: TodoList) => toDo.id !== id)),
           dispatch(
             updateTodoList(
               [...todoList].filter((toDo: TodoList) => toDo.id !== id),

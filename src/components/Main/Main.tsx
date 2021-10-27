@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {
   View,
@@ -12,10 +12,9 @@ import {
   Dimensions,
 } from 'react-native';
 import colors from '../../styles/colors';
-import {updateTodoList, updateIsChecked} from '../../store/modules/todoList';
+import {updateTodoList} from '../../store/modules/todoList';
 import DeviceInfo from 'react-native-device-info';
 import CheckBox from '@react-native-community/checkbox';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import axios from 'axios';
 
@@ -25,23 +24,24 @@ type TodoList = {
   isToday: boolean;
 };
 
+const API_URL = 'https://test.planfit.ai/todos';
+
 const windowWidth = Dimensions.get('window').width;
 
 const Main = () => {
   const dispatch = useDispatch();
+
   const uid = DeviceInfo.getUniqueId();
 
   const [isToday, setIsToday] = useState(true);
 
   const [currentTodo, setCurrentTodo] = useState('');
 
-  // const isChecked = useSelector(state => state.todoListReducer.isChecked);
-
   const todoList = useSelector(state => state.todoListReducer.todoList);
 
   const postTodoListData = async () => {
     try {
-      const response = await axios.post('https://test.planfit.ai/todos', {
+      const response = await axios.post(API_URL, {
         user_id: uid,
         text: currentTodo,
         is_today: isToday,
@@ -54,23 +54,37 @@ const Main = () => {
           text: '확인',
         },
       ]);
-      console.log('error', e);
     }
   };
 
-  const deleteData = async id => {
+  const deleteTodoListData = async id => {
     try {
-      axios.delete(`https://test.planfit.ai/todos/${id}`);
-      const response = await axios.get('https://test.planfit.ai/todos');
+      axios.delete(`${API_URL}/${id}`);
+      const response = await axios.get(API_URL);
       dispatch(updateTodoList(response.data));
-      console.log('todoList', todoList);
     } catch (e) {
       Alert.alert('네트워크를 확인해주세요!', '', [
         {
           text: '확인',
         },
       ]);
-      console.log('error', e);
+    }
+  };
+
+  const updateIsCheckedData = async todo => {
+    try {
+      const todoData = await axios.get(`${API_URL}/${todo.id}`);
+      await axios.patch(`${API_URL}/${todo.id}`, {
+        is_checked: !todoData.data.is_checked,
+      });
+      const everyTodo = await axios.get(API_URL);
+      dispatch(updateTodoList(everyTodo.data));
+    } catch (e) {
+      Alert.alert('네트워크를 확인해주세요!', '', [
+        {
+          text: '확인',
+        },
+      ]);
     }
   };
 
@@ -79,19 +93,6 @@ const Main = () => {
       return;
     }
     postTodoListData();
-    // post를 하고 받아온 respond를 가지고 리덕스에 저장
-
-    // const newTodoList = [
-    //   ...todoList,
-    //   {
-    //     id: Date.now(),
-    //     text: currentTodo,
-    //     isToday: isToday,
-    //     // isChecked: isChecked,
-    //   },
-    // ];
-    // dispatch(updateTodoList(newTodoList));
-    // setCurrentTodo('');
   };
 
   const onChangeText = (text: string) => {
@@ -106,37 +107,28 @@ const Main = () => {
     setIsToday(false);
   };
 
-  // useEffect(() => dispatch(updateTodoList([])), []);
-  useEffect(() => console.log('todoList바깥', todoList), []);
-
   const handleDeleteTodolist = (id: number) => {
     Alert.alert('정말 삭제하시겠어요?', '', [
       {
         text: '네',
-        onPress: () =>
-          // getDelete를 실행해준뒤 getData로 받은 값을 리덕스에 저장해준다.
-          // dispatch(
-          //   updateTodoList(
-          //     [...todoList].filter((toDo: TodoList) => toDo.id !== id),
-          //   ),
-          // ),
-          deleteData(id),
+        onPress: () => deleteTodoListData(id),
       },
       {
         text: '아니요',
       },
     ]);
   };
+
   const renderItem = ({item: todo}) => {
     if (todo.is_today === isToday) {
       return (
         <View style={styles.todoListContainer} key={todo.id}>
-          {/* <CheckBox
-            value={todo.isChecked}
+          <CheckBox
+            value={todo.is_checked}
             boxType="square"
             // onFillColor="grey"
-            onValueChange={todo => dispatch(updateIsChecked(!isChecked))}
-          /> */}
+            onValueChange={() => updateIsCheckedData(todo)}
+          />
           <Text style={styles.todoList}>{todo.text}</Text>
           <Button onPress={() => handleDeleteTodolist(todo.id)} title="🗑" />
         </View>

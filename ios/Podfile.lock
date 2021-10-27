@@ -339,6 +339,10 @@ PODS:
     - React-perflogger (= 0.66.1)
   - RNCAsyncStorage (1.15.9):
     - React-Core
+  - RNCCheckbox (0.5.9):
+    - React-Core
+  - RNDeviceInfo (8.4.2):
+    - React-Core
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
     - Yoga (~> 1.14)
@@ -397,6 +401,8 @@ DEPENDENCIES:
   - React-runtimeexecutor (from `../node_modules/react-native/ReactCommon/runtimeexecutor`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCCheckbox (from `../node_modules/@react-native-community/checkbox`)"
+  - RNDeviceInfo (from `../node_modules/react-native-device-info`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -477,6 +483,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
+  RNCCheckbox:
+    :path: "../node_modules/@react-native-community/checkbox"
+  RNDeviceInfo:
+    :path: "../node_modules/react-native-device-info"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -524,9 +534,11 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: 33a949a51bec5f8a3c9e8d8092deb259600d761e
   ReactCommon: 620442811dc6f707b4bf5e3b27d4f19c12d5a821
   RNCAsyncStorage: d599364c12b1ddb042cc2d7ab6f8258962b83097
+  RNCCheckbox: 7e2cd6ea8e200210c36fe0898bbe200826bdaf56
+  RNDeviceInfo: bd05cd9501c2eef0300b391b1296f1515cecca25
   Yoga: 2b4a01651f42a32f82e6cef3830a3ba48088237f
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
-PODFILE CHECKSUM: ade8a54f1b57f176781ac4843aae0a3790e7be45
+PODFILE CHECKSUM: 4d2f8999fdcccda0c27d6f718b6a2b012d2117c4
 
 COCOAPODS: 1.11.2

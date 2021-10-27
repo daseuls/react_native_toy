@@ -8,5 +8,3 @@ export const rootReducer = combineReducers({
 });
 
 export default rootReducer;
-
-// 루트리듀서는 store에서 불러온다.

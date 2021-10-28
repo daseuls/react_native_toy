@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {
   View,
@@ -12,17 +12,17 @@ import {
   Dimensions,
 } from 'react-native';
 import colors from '../../styles/colors';
-import {updateTodoList} from '../../store/modules/todoList';
+import {
+  updateTodoList,
+  deleteTodoList,
+  updateIsChecked,
+  editTodoList,
+} from '../../store/modules/todoList';
 import DeviceInfo from 'react-native-device-info';
 import CheckBox from '@react-native-community/checkbox';
-
+import {rootReducer} from '../../store/modules';
 import axios from 'axios';
-
-type TodoList = {
-  id: number;
-  text: string;
-  isToday: boolean;
-};
+import humps from 'humps';
 
 const API_URL = 'https://test.planfit.ai/todos';
 
@@ -30,23 +30,33 @@ const windowWidth = Dimensions.get('window').width;
 
 const Main = () => {
   const dispatch = useDispatch();
-
   const uid = DeviceInfo.getUniqueId();
-
   const [isToday, setIsToday] = useState(true);
-
   const [currentTodo, setCurrentTodo] = useState('');
 
+  const [textInput, setTextInput] = useState('');
   const todoList = useSelector(state => state.todoListReducer.todoList);
+
+  const decamelizedParams = params => {
+    return humps.decamelizeKeys(params);
+  };
+  // const params = {userId: uid, text: currentTodo, isToday: isToday};
+  // const decamelizedParams = humps.decamelizeKeys(params);
 
   const postTodoListData = async () => {
     try {
-      const response = await axios.post(API_URL, {
-        user_id: uid,
-        text: currentTodo,
-        is_today: isToday,
-      });
-      dispatch(updateTodoList(response.data));
+      const response = await axios.post(
+        API_URL,
+        decamelizedParams({
+          user_id: uid,
+          text: currentTodo,
+          is_today: isToday,
+        }),
+      );
+      console.log(response.data);
+      const camelData = humps.camelizeKeys(response.data);
+      console.log(camelData);
+      dispatch(updateTodoList(camelData));
       setCurrentTodo('');
     } catch (e) {
       Alert.alert('네트워크를 확인해주세요!', '', [
@@ -60,8 +70,7 @@ const Main = () => {
   const deleteTodoListData = async id => {
     try {
       axios.delete(`${API_URL}/${id}`);
-      const response = await axios.get(API_URL);
-      dispatch(updateTodoList(response.data));
+      dispatch(deleteTodoList(todoList, id));
     } catch (e) {
       Alert.alert('네트워크를 확인해주세요!', '', [
         {
@@ -73,12 +82,19 @@ const Main = () => {
 
   const updateIsCheckedData = async todo => {
     try {
-      const todoData = await axios.get(`${API_URL}/${todo.id}`);
-      await axios.patch(`${API_URL}/${todo.id}`, {
-        is_checked: !todoData.data.is_checked,
-      });
-      const everyTodo = await axios.get(API_URL);
-      dispatch(updateTodoList(everyTodo.data));
+      // const todoData = await axios.get(`${API_URL}/${todo.id}`);
+      // await axios.patch(`${API_URL}/${todo.id}`, {
+      //   is_checked: !todoData.data.is_checked,
+      // });
+      // dispatch(updateIsChecked(todoList, idValue, !todoData.data.is_checked));
+      // const todoData = await axios.get(`${API_URL}/${todo.id}`);
+      // dispatch(updateIsChecked(todoList, idValue, !todo.is_checked));
+      console.log(todo);
+      await axios.patch(
+        `${API_URL}/${todo.id}`,
+        decamelizedParams({is_checked: !todo.isChecked}),
+      );
+      dispatch(updateIsChecked(todo.id));
     } catch (e) {
       Alert.alert('네트워크를 확인해주세요!', '', [
         {
@@ -95,16 +111,19 @@ const Main = () => {
     postTodoListData();
   };
 
-  const onChangeText = (text: string) => {
-    setCurrentTodo(text);
-  };
-
-  const handleToday = () => {
-    setIsToday(true);
-  };
-
-  const handleWeekly = () => {
-    setIsToday(false);
+  const editTodoListData = async id => {
+    try {
+      await axios.patch(`${API_URL}/${id}`, {
+        text: textInput,
+      });
+      dispatch(editTodoList(id, textInput));
+    } catch (e) {
+      Alert.alert('네트워크를 확인해주세요!', '', [
+        {
+          text: '확인',
+        },
+      ]);
+    }
   };
 
   const handleDeleteTodolist = (id: number) => {
@@ -120,16 +139,20 @@ const Main = () => {
   };
 
   const renderItem = ({item: todo}) => {
-    if (todo.is_today === isToday) {
+    if (todo.isToday === isToday) {
       return (
         <View style={styles.todoListContainer} key={todo.id}>
           <CheckBox
-            value={todo.is_checked}
+            value={todo.isChecked}
             boxType="square"
-            // onFillColor="grey"
             onValueChange={() => updateIsCheckedData(todo)}
           />
-          <Text style={styles.todoList}>{todo.text}</Text>
+          <TextInput
+            style={styles.todoList}
+            onChangeText={text => setTextInput(text)}
+            onEndEditing={() => editTodoListData(todo.id)}>
+            {todo.text}
+          </TextInput>
           <Button onPress={() => handleDeleteTodolist(todo.id)} title="🗑" />
         </View>
       );
@@ -140,7 +163,7 @@ const Main = () => {
   return (
     <View style={styles.main}>
       <View style={styles.nav}>
-        <TouchableOpacity onPress={handleToday}>
+        <TouchableOpacity onPress={() => setIsToday(true)}>
           <Text
             style={
               isToday
@@ -153,7 +176,7 @@ const Main = () => {
             Today
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleWeekly}>
+        <TouchableOpacity onPress={() => setIsToday(false)}>
           <Text
             style={{
               ...styles.navMenu,
@@ -174,7 +197,7 @@ const Main = () => {
             }
             returnKeyType="done"
             style={styles.todoSubmitInput}
-            onChangeText={onChangeText}
+            onChangeText={text => setCurrentTodo(text)}
             onSubmitEditing={onSubmitInputValue}
           />
         </View>

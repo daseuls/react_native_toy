@@ -40,8 +40,6 @@ const Main = () => {
   const decamelizedParams = params => {
     return humps.decamelizeKeys(params);
   };
-  // const params = {userId: uid, text: currentTodo, isToday: isToday};
-  // const decamelizedParams = humps.decamelizeKeys(params);
 
   const postTodoListData = async () => {
     try {
@@ -82,14 +80,6 @@ const Main = () => {
 
   const updateIsCheckedData = async todo => {
     try {
-      // const todoData = await axios.get(`${API_URL}/${todo.id}`);
-      // await axios.patch(`${API_URL}/${todo.id}`, {
-      //   is_checked: !todoData.data.is_checked,
-      // });
-      // dispatch(updateIsChecked(todoList, idValue, !todoData.data.is_checked));
-      // const todoData = await axios.get(`${API_URL}/${todo.id}`);
-      // dispatch(updateIsChecked(todoList, idValue, !todo.is_checked));
-      console.log(todo);
       await axios.patch(
         `${API_URL}/${todo.id}`,
         decamelizedParams({is_checked: !todo.isChecked}),

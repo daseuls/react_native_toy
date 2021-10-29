@@ -1,4 +1,5 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
+import {useSelector, useDispatch} from 'react-redux';
 import {
   View,
   Text,
@@ -6,48 +7,118 @@ import {
   TouchableOpacity,
   Button,
   TextInput,
-  ScrollView,
   Alert,
+  FlatList,
   Dimensions,
 } from 'react-native';
 import colors from '../../styles/colors';
+import {
+  updateTodoList,
+  deleteTodoList,
+  updateIsChecked,
+  editTodoList,
+} from '../../store/modules/todoList';
+import DeviceInfo from 'react-native-device-info';
+import CheckBox from '@react-native-community/checkbox';
+import {rootReducer} from '../../store/modules';
+import axios from 'axios';
+import humps from 'humps';
 
-type TodoList = {
-  id: number;
-  text: string;
-  isToday: boolean;
-};
+const API_URL = 'https://test.planfit.ai/todos';
 
 const windowWidth = Dimensions.get('window').width;
 
 const Main = () => {
-  const [isToday, setIsToday] = useState<boolean>(true);
-  const [currentTodo, setCurrentTodo] = useState<string>('');
-  const [todoList, setTodoList] = useState<Array<TodoList>>([]);
+  const dispatch = useDispatch();
+  const uid = DeviceInfo.getUniqueId();
+  const [isToday, setIsToday] = useState(true);
+  const [currentTodo, setCurrentTodo] = useState('');
+
+  const [textInput, setTextInput] = useState('');
+  const todoList = useSelector(state => state.todoListReducer.todoList);
+
+  const decamelizedParams = params => {
+    return humps.decamelizeKeys(params, {separator: '_'});
+  };
+
+  const postTodoListData = async () => {
+    try {
+      const response = await axios.post(
+        API_URL,
+        decamelizedParams({
+          userId: uid,
+          text: currentTodo,
+          isToday: isToday,
+        }),
+      );
+      const camelData = humps.camelizeKeys(response.data);
+      dispatch(updateTodoList(camelData));
+      setCurrentTodo('');
+    } catch (e) {
+      Alert.alert('네트워크를 확인해주세요!', '', [
+        {
+          text: '확인',
+        },
+      ]);
+    }
+  };
+
+  const deleteTodoListData = async id => {
+    try {
+      axios.delete(`${API_URL}/${id}`);
+      dispatch(deleteTodoList(todoList, id));
+    } catch (e) {
+      Alert.alert('네트워크를 확인해주세요!', '', [
+        {
+          text: '확인',
+        },
+      ]);
+    }
+  };
+
+  const updateIsCheckedData = async todo => {
+    try {
+      await axios.patch(
+        `${API_URL}/${todo.id}`,
+        decamelizedParams({isChecked: !todo.isChecked}),
+      );
+      dispatch(updateIsChecked(todo.id));
+    } catch (e) {
+      Alert.alert('네트워크를 확인해주세요!', '', [
+        {
+          text: '확인',
+        },
+      ]);
+    }
+  };
 
   const onSubmitInputValue = () => {
     if (currentTodo === '') {
       return;
     }
-    setTodoList([
-      ...todoList,
-      {id: Date.now(), text: currentTodo, isToday: isToday},
-    ]);
-    setCurrentTodo('');
+    postTodoListData();
   };
 
-  const onChangeText = (text: string) => setCurrentTodo(text);
-
-  const handleToday = () => setIsToday(true);
-
-  const handleWeekly = () => setIsToday(false);
+  const editTodoListData = async id => {
+    try {
+      await axios.patch(`${API_URL}/${id}`, {
+        text: textInput,
+      });
+      dispatch(editTodoList(id, textInput));
+    } catch (e) {
+      Alert.alert('네트워크를 확인해주세요!', '', [
+        {
+          text: '확인',
+        },
+      ]);
+    }
+  };
 
   const handleDeleteTodolist = (id: number) => {
     Alert.alert('정말 삭제하시겠어요?', '', [
       {
         text: '네',
-        onPress: () =>
-          setTodoList([...todoList].filter((toDo: TodoList) => toDo.id !== id)),
+        onPress: () => deleteTodoListData(id),
       },
       {
         text: '아니요',
@@ -55,10 +126,32 @@ const Main = () => {
     ]);
   };
 
+  const renderItem = ({item: todo}) => {
+    if (todo.isToday === isToday) {
+      return (
+        <View style={styles.todoListContainer} key={todo.id}>
+          <CheckBox
+            value={todo.isChecked}
+            boxType="square"
+            onValueChange={() => updateIsCheckedData(todo)}
+          />
+          <TextInput
+            style={styles.todoList}
+            onChangeText={text => setTextInput(text)}
+            onEndEditing={() => editTodoListData(todo.id)}>
+            {todo.text}
+          </TextInput>
+          <Button onPress={() => handleDeleteTodolist(todo.id)} title="🗑" />
+        </View>
+      );
+    }
+    return null;
+  };
+
   return (
     <View style={styles.main}>
       <View style={styles.nav}>
-        <TouchableOpacity onPress={handleToday}>
+        <TouchableOpacity onPress={() => setIsToday(true)}>
           <Text
             style={
               isToday
@@ -71,7 +164,7 @@ const Main = () => {
             Today
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleWeekly}>
+        <TouchableOpacity onPress={() => setIsToday(false)}>
           <Text
             style={{
               ...styles.navMenu,
@@ -92,21 +185,16 @@ const Main = () => {
             }
             returnKeyType="done"
             style={styles.todoSubmitInput}
-            onChangeText={onChangeText}
-            onSubmitEditing={onSubmitInputValue}></TextInput>
+            onChangeText={text => setCurrentTodo(text)}
+            onSubmitEditing={onSubmitInputValue}
+          />
         </View>
-        <ScrollView style={styles.todoListsContainer}>
-          {todoList.map(todo =>
-            todo.isToday === isToday ? (
-              <View style={styles.todoListContainer} key={todo.id}>
-                <Text style={styles.todoList}>📌 {todo.text}</Text>
-                <Button
-                  onPress={() => handleDeleteTodolist(todo.id)}
-                  title="🗑"></Button>
-              </View>
-            ) : null,
-          )}
-        </ScrollView>
+        <FlatList
+          style={styles.todoListsContainer}
+          data={todoList}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+        />
       </View>
     </View>
   );

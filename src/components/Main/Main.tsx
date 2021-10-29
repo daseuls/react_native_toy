@@ -38,7 +38,7 @@ const Main = () => {
   const todoList = useSelector(state => state.todoListReducer.todoList);
 
   const decamelizedParams = params => {
-    return humps.decamelizeKeys(params);
+    return humps.decamelizeKeys(params, {separator: '_'});
   };
 
   const postTodoListData = async () => {
@@ -46,14 +46,12 @@ const Main = () => {
       const response = await axios.post(
         API_URL,
         decamelizedParams({
-          user_id: uid,
+          userId: uid,
           text: currentTodo,
-          is_today: isToday,
+          isToday: isToday,
         }),
       );
-      console.log(response.data);
       const camelData = humps.camelizeKeys(response.data);
-      console.log(camelData);
       dispatch(updateTodoList(camelData));
       setCurrentTodo('');
     } catch (e) {
@@ -82,7 +80,7 @@ const Main = () => {
     try {
       await axios.patch(
         `${API_URL}/${todo.id}`,
-        decamelizedParams({is_checked: !todo.isChecked}),
+        decamelizedParams({isChecked: !todo.isChecked}),
       );
       dispatch(updateIsChecked(todo.id));
     } catch (e) {
